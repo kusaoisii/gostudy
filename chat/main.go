@@ -8,11 +8,16 @@ import (
 	"path/filepath"
 	"log"
 	"flag"
+	"os"
+	"gostudy/trace"
 )
 
 type templateHandler struct {
+	// 関数を一度だけ呼び出したい場合に使用
+	// https://play.golang.org/p/vrZ6thRhct
 	once	sync.Once
 	filename	string
+	//
 	temp1	*template.Template
 }
 
@@ -32,6 +37,7 @@ func main(){
 	flag.Parse() // フラグを解釈する
 
 	r := newRoom()
+	r.tracer = trace.New(os.Stdout)
 	http.Handle("/", &templateHandler{filename: "chat.html"})
 	http.Handle("/room", r)
 	// チャットルーム開始します
