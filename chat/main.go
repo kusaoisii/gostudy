@@ -3,10 +3,11 @@ package main
 
 import (
 	"net/http"
-	"log"
 	"sync"
 	"html/template"
 	"path/filepath"
+	"log"
+	"flag"
 )
 
 type templateHandler struct {
@@ -21,15 +22,24 @@ func (t *templateHandler) ServeHTTP (w http.ResponseWriter, r *http.Request){
 			template.Must(template.ParseFiles(filepath.Join("templates",
 				t.filename)))
 	})
-	t.temp1.Execute(w, nil)
+	t.temp1.Execute(w, r)
 }
 
 
 
 func main(){
-	http.Handle("/",&templateHandler{filename:"chat.html"})
-	if err := http.ListenAndServe(":8085",nil); err != nil {
-		log.Fatal("ListenAndServe",err)
+	var addr = flag.String("addr", ":8080", "アプリケーションのアドレス")
+	flag.Parse() // フラグを解釈する
+
+	r := newRoom()
+	http.Handle("/", &templateHandler{filename: "chat.html"})
+	http.Handle("/room", r)
+	// チャットルーム開始します
+	go r.run()
+	// webサーバーを起動
+	log.Println("webサーバーを開始します。ポート：", *addr)
+	if err := http.ListenAndServe(*addr, nil); err != nil {
+		log.Fatal("ListenAndServe:", err)
 	}
 }
 
